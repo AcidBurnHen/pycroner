@@ -22,6 +22,7 @@ pip install -r requirements.txt  # or install pyyaml manually
 ```
 
 ## Usage
+### From code 
 1. Create a `pycroner.yml` file describing your jobs. A simple example is shown
    below.
 2. Run the job runner from a Python script:
@@ -34,6 +35,23 @@ run("pycroner.yml")
 
 The runner checks schedules every minute and spawns each job as a subprocess
 when its cron expression matches the current time.
+
+### From CLI
+You can also invoke the runner directly from the command line using the
+`pycroner` command. By default it looks for `pycroner.yml` in the current
+directory:
+
+```bash
+pycroner
+```
+
+Specify an alternative working directory with `--at` or a specific
+configuration file with `--config`:
+
+```bash
+pycroner --at /path/to/project
+pycroner --config custom.yml
+```
 
 ## Example Configuration
 ```yaml

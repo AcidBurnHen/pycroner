@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-pycroner = "pycroner.core:cli_entrypoint"
+pycroner = "pycroner.__main__:cli_entrypoint"
 
 [build-system]
 requires = ["setuptools>=61.0"]
