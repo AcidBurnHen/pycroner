@@ -15,11 +15,11 @@ cron schedule matches the current time.
   described in [`pycroner/spec.md`](pycroner/spec.md).
 
 ## Installation
-Pycroner requires Python 3.8+ and [PyYAML](https://pyyaml.org/).
-Clone the repository and install the dependencies:
+
+From PyPI:
 
 ```bash
-pip install -r requirements.txt  # or install pyyaml manually
+pip install pycroner
 ```
 
 ## Usage

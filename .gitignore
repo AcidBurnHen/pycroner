@@ -1,1 +1,12 @@
+# Python
 __pycache__
+*.py[cod]
+
+# Build 
+/build/
+/dist/
+/*.egg-info/
+
+# Editors
+.vscode/
+.idea/
