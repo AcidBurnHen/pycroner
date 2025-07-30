@@ -1,10 +1,11 @@
+import shlex
 from dataclasses import dataclass
-from typing import Union, List 
+from typing import Union, List
 
 @dataclass
 class JobInstance: 
     id: str 
-    command: str 
+    command: List[str]
 
 @dataclass
 class JobSpec:
@@ -15,19 +16,19 @@ class JobSpec:
 
     def expand(self) -> List[JobInstance]:
         if self.fanout is None: 
-            return [JobInstance(id=self.id, command=self.command)]
+            return [JobInstance(id=self.id, command=shlex.split(self.command))]
 
         if isinstance(self.fanout, list):
             jobs = []
             for args in self.fanout: 
-                jobs.append(JobInstance(id=self.id, command=f"{self.command} {args}"))
+                jobs.append(JobInstance(id=self.id, command=shlex.split(f"{self.command} {args}")))
             
             return jobs  
         
         if isinstance(self.fanout, int): 
             jobs = []
             for i in range(self.fanout): 
-                jobs.append(JobInstance(id=self.id, command=f"{self.command} {i}"))
+                jobs.append(JobInstance(id=self.id, command=shlex.split(f"{self.command} {i}")))
 
             return jobs 
         
