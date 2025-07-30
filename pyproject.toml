@@ -1,0 +1,20 @@
+[project]
+name = "pycroner"
+version = "0.1.0"
+description = "A multi-platform cron-like job runner in Python"
+authors = [{ name="Marin Luic", email="marin.luic@gmail.com" }]
+license = "GPL-3.0"
+readme = "README.md"
+requires-python = ">=3.8"
+
+dependencies = [
+  "croniter>=1.3.0",
+  "pyyaml>=6.0"
+]
+
+[project.scripts]
+pycroner = "pycroner.core:cli_entrypoint"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
