@@ -1,3 +1,4 @@
+![Pycroner](icon.png)
 # Pycroner
 
 **Pycroner** is a lightweight cron style job runner implemented in Python.

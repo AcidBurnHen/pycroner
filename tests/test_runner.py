@@ -45,8 +45,10 @@ def test_load_config(tmp_path):
 
     sys.modules['yaml'] = DummyYAML
     load_mod = importlib.reload(importlib.import_module("pycroner.load"))
+
     jobs = load_mod.load_config(str(cfg_file))
     assert len(jobs) == 1
+    
     job = jobs[0]
     assert job.id == "j"
     assert job.command == "echo x"
