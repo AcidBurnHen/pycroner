@@ -1,3 +1,4 @@
+import os 
 import yaml 
 from typing import List 
 from pathlib import Path 
@@ -5,6 +6,9 @@ from pycroner.models import JobSpec
 from pycroner.parser import CronParser
 
 def load_config(path: str) -> List[JobSpec]:
+    if not os.path.exists(path):
+        raise ValueError(f'Invalid path provided for config: {path}, configuration file does not exist')
+
     with open(Path(path), 'r', encoding='utf-8') as f: 
         config = yaml.safe_load(f)
 

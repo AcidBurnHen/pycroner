@@ -1,3 +1,4 @@
+import os
 import time 
 import subprocess
 from datetime import datetime
@@ -9,14 +10,20 @@ def run(config_path="pycroner.yml"):
     jobs = load_config(config_path)
 
     last_minute = None 
+    config_last_modified_at = os.path.getmtime(config_path)
 
     while True: 
         now = datetime.now()
         current_minute = (now.year, now.month, now.day, now.hour, now.minute)
 
-        if current_minute != last_minute: 
+        if current_minute == last_minute: 
             last_minute = current_minute
             
+            config_new_modified_at = os.path.getmtime(config_path)
+            if config_new_modified_at != config_last_modified_at: 
+                jobs = load_config(config_path)
+                config_last_modified_at = config_new_modified_at
+
             for job in jobs: 
                 if not should_run(job.schedule): 
                     continue
