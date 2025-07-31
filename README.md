@@ -76,3 +76,6 @@ jobs:
 
 Jobs run independently, and any output or error handling is left to your
 commands. For full details see [`pycroner/spec.md`](pycroner/spec.md).
+
+If the configuration file changes while the runner is active, it will be
+reloaded automatically so updates take effect without restarting.

@@ -1,6 +1,6 @@
 [project]
 name = "pycroner"
-version = "0.1.1"
+version = "0.1.2"
 description = "A multi-platform cron-like job runner in Python"
 authors = [{ name="Marin Luic", email="marin.luic@gmail.com" }]
 license = "GPL-3.0"
