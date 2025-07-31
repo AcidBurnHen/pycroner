@@ -29,9 +29,9 @@ pip install pycroner
 2. Run the job runner from a Python script:
 
 ```python
-from pycroner.runner import run
+from pycroner.runner import Runner
 
-run("pycroner.yml")
+Runner("pycroner.yml").run()
 ```
 
 The runner checks schedules every minute and spawns each job as a subprocess
@@ -79,3 +79,5 @@ commands. For full details see [`pycroner/spec.md`](pycroner/spec.md).
 
 If the configuration file changes while the runner is active, it will be
 reloaded automatically so updates take effect without restarting.
+
+Output from each job is streamed with a colored prefix containing the job id, and if fanned out, the fannout numeric id is attached.
