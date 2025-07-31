@@ -20,15 +20,15 @@ class JobSpec:
 
         if isinstance(self.fanout, list):
             jobs = []
-            for args in self.fanout: 
-                jobs.append(JobInstance(id=self.id, command=shlex.split(f"{self.command} {args}")))
+            for i, args in enumerate(self.fanout): 
+                jobs.append(JobInstance(id=f"{self.id}-{i}", command=shlex.split(f"{self.command} {args}")))
             
             return jobs  
         
         if isinstance(self.fanout, int): 
             jobs = []
             for i in range(self.fanout): 
-                jobs.append(JobInstance(id=self.id, command=shlex.split(f"{self.command} {i}")))
+                jobs.append(JobInstance(id=f"{self.id}-{i}", command=shlex.split(f"{self.command} {i}")))
 
             return jobs 
         
