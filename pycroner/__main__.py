@@ -1,7 +1,7 @@
 import argparse
 import os
 from pathlib import Path
-from pycroner.runner import run
+from pycroner.runner import Runner
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Run pycroner jobs")
@@ -16,8 +16,8 @@ def main(argv=None):
 
     config_path = Path(args.config) if args.config else working_dir / "pycroner.yml"
     
-    run(str(config_path))
-
+    runner = Runner(str(config_path))
+    runner.run()
 
 def cli_entrypoint():
     main()
