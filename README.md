@@ -5,6 +5,24 @@
 Jobs are configured via a YAML file and executed by the runner once their
 cron schedule matches the current time.
 
+## Why Pycroner?
+
+This started as a tool I built for myself.
+
+I was working on a system that had to run both on **Windows and Linux**, and keeping `cron` jobs in sync with **Windows Task Scheduler** was a constant headache. I wanted something dead simple, predictable, and cross-platform. 
+
+And I didn’t want to write the same job schedules twice in two different formats.
+
+So I built **Pycroner**.
+
+It runs scheduled jobs from a single **YAML file**, no matter what OS you’re on. You just write your jobs once and they work everywhere.
+
+Along the way, I added a few extra things:
+- **Fanout support** — run the same job multiple times with different args or in parallel.
+- **Hot reload** — update your config and it just picks it up live.
+
+If you're building automation or ETL flows, or just want a sane way to run time-based jobs in a Python project, this might save you from the time and pain I went through managing a project on both Windows and Linux.
+
 ## Features
 - Parses standard five field cron expressions (minute, hour, day, month, weekday)
   using a small built in parser.
@@ -80,4 +98,4 @@ commands. For full details see [`pycroner/spec.md`](pycroner/spec.md).
 If the configuration file changes while the runner is active, it will be
 reloaded automatically so updates take effect without restarting.
 
-Output from each job is streamed with a colored prefix containing the job id, and if fanned out, the fannout numeric id is attached.
+Output from each job is streamed with a colored prefix containing the job id, and if fanned out, the fanout numeric id is attached.
