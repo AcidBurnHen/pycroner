@@ -1,6 +1,6 @@
 import shlex
 from dataclasses import dataclass
-from typing import Union, List
+from typing import Dict, Union, List
 
 @dataclass
 class JobInstance: 
@@ -10,7 +10,7 @@ class JobInstance:
 @dataclass
 class JobSpec:
     id: str 
-    schedule: str 
+    schedule: Dict[str, int] 
     command: str 
     fanout: Union[int, List[str], None] = None 
 

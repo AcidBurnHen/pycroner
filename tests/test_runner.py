@@ -57,11 +57,11 @@ def test_load_config(tmp_path):
 
 def test_should_run(monkeypatch):
     schedule = {
-        "minute": {30},
-        "hour": {6},
-        "day": {8},
-        "month": {1},
-        "weekday": {0},
+        "minute": 1 << 30,
+        "hour": 1 << 6,
+        "day": 1 << 8,
+        "month": 1 << 1,
+        "weekday": 1 << 0,
     }
 
     class FakeDateTime(datetime):
@@ -94,15 +94,20 @@ def test_run_job_invokes_popen(monkeypatch):
     run_mod = importlib.reload(importlib.import_module("pycroner.runner"))
 
     class DummyPopen:
-        def __init__(self, cmd, shell=False):
+        def __init__(self, cmd, shell=False, **kwargs):
             called["cmd"] = cmd
             called["shell"] = shell
+            called.update(kwargs)
         def wait(self):
             return 0
+        @property
+        def stdout(self):
+            return ["hello from dummy\n"]
 
     monkeypatch.setattr(run_mod.subprocess, "Popen", DummyPopen)
 
-    run_mod.run_job(instance)
+    runner = run_mod.Runner()
+    runner.run_once(instance)
 
     assert called["cmd"] == ["echo", "hello"]
-    assert called["shell"] is True
+    assert called["shell"] is False

@@ -16,6 +16,9 @@ class Runner:
         self.config_path = config_path
         self.printer = Printer(to_print=to_print)
         self.color_picker = CliColorPicker()
+
+    def run_once(self, instance: JobInstance):
+        self.__run_process(instance)
     
     def run(self):
         """Continuously schedule and execute jobs.
@@ -74,7 +77,20 @@ class Runner:
                 for job in jobs:
                     heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), job))
 
-    def __compute_next_run_time(self, schedule: dict, start: datetime) -> datetime:
+    @staticmethod
+    def __mask_to_list(mask: int) -> List[int]:
+        values: List[int] = []
+        bit = 0
+        
+        while mask: 
+            if mask & 1: 
+                values.append(bit)
+            mask >>= 1
+            bit += 1
+        
+        return values 
+
+    def __compute_next_run_time(self, schedule: dict[str, int], start: datetime) -> datetime:
         """Compute the next datetime at which ``schedule`` should run.
 
         ``start`` is treated as an exclusive lower bound; the returned time will
@@ -87,14 +103,20 @@ class Runner:
         if start.second or start.microsecond:
             current += timedelta(minutes=1)
 
-        minutes = sorted(schedule["minute"])
-        hours = sorted(schedule["hour"])
-        weekdays = schedule["weekday"]
-        months = sorted(schedule["month"])
+        minutes_mask = schedule["minute"]
+        hours_mask = schedule["hour"]
+        weekdays_mask = schedule["weekday"]
+        months_mask = schedule["month"]
+        days_mask = schedule["day"]
+
+        minutes = self.__mask_to_list(minutes_mask)
+        hours = self.__mask_to_list(hours_mask)
+        months = self.__mask_to_list(months_mask)
+        days = self.__mask_to_list(days_mask)
 
         while True:
             # Month
-            if current.month not in schedule["month"]:
+            if not months_mask & (1 << current.month):
                 next_month = next((m for m in months if m > current.month), None)
                 if next_month is None:
                     current = current.replace(year=current.year + 1, month=months[0], day=1, hour=0, minute=0,)
@@ -105,7 +127,7 @@ class Runner:
 
             # Day and weekday
             max_day = monthrange(current.year, current.month)[1]
-            valid_days = sorted(d for d in schedule["day"] if d <= max_day)
+            valid_days = [d for d in days if d <= max_day]
             
             if not valid_days:
                 # No valid day this month; advance to next month
@@ -117,14 +139,14 @@ class Runner:
 
                 continue
 
-            if current.day not in valid_days or current.weekday() not in weekdays:
+            if not days_mask & (1 << current.day) or not weekdays_mask & (1 << current.weekday()):
                 current += timedelta(days=1)
                 current = current.replace(hour=0, minute=0)
 
                 continue
 
             # Hour
-            if current.hour not in schedule["hour"]:
+            if not hours_mask & (1 << current.hour):
                 next_hour = next((h for h in hours if h > current.hour), None)
                 if next_hour is None:
                     current += timedelta(days=1)
@@ -134,7 +156,7 @@ class Runner:
                 continue
 
             # Minute
-            if current.minute not in schedule["minute"]:
+            if not minutes_mask & (1 << current.minute):
                 next_minute = next((m for m in minutes if m > current.minute), None)
                 if next_minute is None:
                     current += timedelta(hours=1)

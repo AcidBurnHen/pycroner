@@ -11,44 +11,49 @@ class CronParser:
             "weekday": (0, 6)
         }        
 
-    def parse(self, expr: str) -> Dict[str, Set[int]]:
+    def parse(self, expr: str) -> Dict[str, int]:
         parts = expr.strip().split()
         if len(parts) != 5: 
             raise ValueError(f"Expected 5 fields in cron expression, got: {len(parts)}, please provide a proper cron expression")
         
-        parsed = {}
+        parsed: Dict[str, int] = {}
         for i, field in enumerate(self.FIELD_NAMES):
-            part = parts[i]
-            field_range = self.FIELD_RANGES[field]
-
-            parsed[field] = self.__parse_field(part, field_range)
+            start, end = self.FIELD_RANGES[field]
+            parsed[field] = self.__parse_field(parts[i], start, end)
 
         return parsed
     
-    def __parse_field(self, part: str, field_range: tuple[int, int]) -> Set[int]: 
-        result = set()
+    def __parse_field(self, part: str, start: int, end: int) -> int: 
+        # Result is now a bitmask to save on memory
+        result = 0
 
         for expr_part in part.split(','):
-            start, end = field_range
-
             if expr_part == '*':
-                result.update(set(range(start, end + 1)))
+                result |= self.__range_mask(start, end)
             elif expr_part.startswith('*/'):
                 step = int(expr_part[2:])
-                result.update(set(range(start, end + 1, step)))
+                result |= self.__range_mask(start, end, step)
             elif '-' in expr_part:
-                a, b = expr_part.split('-')
-                a, b = int(a), int(b)
+                a_str, b_str = expr_part.split('-')
+                a, b = int(a_str), int(b_str)
                 if a > b or not (start <= a <= end) or not (start <= b <= end):
                     raise ValueError(f"Invalid range: {a}-{b}")
                 
-                result.update(set(range(a, b + 1)))
+                result |= self.__range_mask(a, b)
             else: 
                 val = int(expr_part)
                 if not (start <= val <= end):
                     raise ValueError(f"Invalid value: {val}")
                 
-                result.update({val})
+                result |= 1 << val 
 
         return result 
+    
+    @staticmethod
+    def __range_mask(start: int, end: int, step: int = 1) -> int: 
+        mask = 0
+        for v in range(start, end + 1, step):
+            mask |= 1 << v 
+
+        return mask 
         
