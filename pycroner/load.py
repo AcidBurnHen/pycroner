@@ -16,13 +16,19 @@ def load_config(path: str) -> List[JobSpec]:
         raise ValueError("Invalid config format. Expected 'jobs' at top level.")
 
     parser = CronParser()
-    job_specs = []
+    cron_jobs = []
+    hook_jobs = []
     for job in config['jobs']: 
-        job_specs.append(JobSpec(
+        job_spec = JobSpec(
             id=job['id'],
             schedule=parser.parse(job['schedule']),
             command=job['command'],
             fanout=job.get('fanout'),
-        ))
+        )
 
-    return job_specs
+        if isinstance(job_spec.schedule, str):
+            hook_jobs.append(job_spec)
+        else: 
+            cron_jobs.append(job_spec)
+
+    return [cron_jobs, hook_jobs]

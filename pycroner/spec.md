@@ -26,13 +26,17 @@ jobs:
 ### `schedule`
 - **Type**: `string`
 - **Required**: Yes
-- **Format**: Standard 5-field crontab syntax
-  - `minute hour day month weekday`
-  - Examples:
-    - `* * * * *` → every minute
-    - `0 0 * * *` → daily at midnight
-    - `*/5 * * * *` → every 5 minutes
-- **Note**: evaluated using `croniter`
+- **Format**:
+  - Standard 5-field crontab syntax
+    - `minute hour day month weekday`
+    - Examples:
+      - `* * * * *` → every minute
+      - `0 0 * * *` → daily at midnight
+      - `*/5 * * * *` → every 5 minutes
+  - or the special values `on_start` and `on_exit`
+    - `on_start` → job runs once when the runner starts
+    - `on_exit` → job runs once when the runner shuts down
+
 
 ### `command`
 - **Type**: `string`

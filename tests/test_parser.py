@@ -50,6 +50,13 @@ def test_parse_mixed_step_and_explicit(parser):
     assert result["month"] == mask_from_values([2])
     assert result["weekday"] == mask_from_values([0])
 
+
+def test_parse_on_start(parser):
+    assert parser.parse("on_start") == "on_start"
+
+def test_parse_on_exit(parser):
+    assert parser.parse("on_exit") == "on_exit"
+
 # ---------------------------------- # 
 #      Cases with invalid crons      # 
 # ---------------------------------- # 

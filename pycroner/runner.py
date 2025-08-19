@@ -1,5 +1,8 @@
 import os
+import sys
 import time
+import signal 
+import atexit
 import heapq
 import subprocess
 from datetime import datetime, timedelta
@@ -17,6 +20,10 @@ class Runner:
         self.printer = Printer(to_print=to_print)
         self.color_picker = CliColorPicker()
 
+        self._on_start_jobs: List[JobSpec] = []
+        self._on_exit_jobs: List[JobSpec] = []
+        self._exit_ran = False 
+
     def run_once(self, instance: JobInstance):
         self.__run_process(instance)
     
@@ -28,17 +35,26 @@ class Runner:
         job is due. When multiple jobs share the same run time we execute all of
         them before scheduling the next iteration.
         """
-
         self.printer.write("\033[34m[pycroner]\033[0m running")
-        jobs = load_config(self.config_path)
+        [cron_jobs, hook_jobs] = load_config(self.config_path)
+        self.__register_hook_jobs(hook_jobs)
 
+        # Register exit jobs 
+        atexit.register(self.__run_exit_jobs)
+        signal.signal(signal.SIGINT, self.__signal_handler)
+        signal.signal(signal.SIGTERM, self.__signal_handler)
+        
         config_last_modified_at = os.path.getmtime(self.config_path)
+
+        # Run start jobs 
+        for job in self._on_start_jobs:
+            self.__run_job(job)
 
         # Min-heap ordered by the next run time for each job.
         job_runs: List[Tuple[datetime, JobSpec]] = []
         now = datetime.now()
         
-        for job in jobs:
+        for job in cron_jobs:
             heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), job))
 
         while True:
@@ -60,21 +76,21 @@ class Runner:
                     due.append((now, job))
 
                 for _, job in due:
-                    for instance in job.expand():
-                        self.printer.write(f"\033[34m[pycroner]\033[0m Running job: {job.id}")
-                        self.__run_process(instance)
+                    self.__run_job(job)
 
                     heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), job,),)
 
             # Reload configuration if it has changed.
             config_new_modified_at = os.path.getmtime(self.config_path)
             if config_new_modified_at != config_last_modified_at:
-                jobs = load_config(self.config_path)
+                [cron_jobs, hook_jobs] = load_config(self.config_path)
+                self.__register_hook_jobs(hook_jobs)
+
                 config_last_modified_at = config_new_modified_at
                 job_runs = []
                 now = datetime.now()
                 
-                for job in jobs:
+                for job in cron_jobs:
                     heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), job))
 
     @staticmethod
@@ -89,6 +105,38 @@ class Runner:
             bit += 1
         
         return values 
+    
+    def __run_job(self, job: JobSpec):
+        for instance in job.expand():
+            self.printer.write(f"\033[34m[pycroner]\033[0m Running job: {job.id}")
+            self.__run_process(instance)
+
+    def __register_hook_jobs(self, hook_jobs: List[JobSpec]): 
+        job_lists = {
+            "on_start": self._on_start_jobs,
+            "on_exit": self._on_exit_jobs,
+        }
+
+        # Cleanup
+        for id in job_lists: 
+            job_lists[id].clear()
+        
+        for job in hook_jobs: 
+            if job.schedule in job_lists: 
+                job_lists[job.schedule].append(job)
+    
+    def __run_exit_jobs(self): 
+        if self._exit_ran or len(self._on_exit_jobs) == 0: 
+            return 
+        
+        self.printer.write("\033[34m[pycroner]\033[0m: Running exit jobs")
+
+        for job in self._on_exit_jobs:
+            self.__run_job(job)
+
+    def __signal_handler(self, signum, frame):
+        self.__run_exit_jobs()
+        sys.exit(0)
 
     def __compute_next_run_time(self, schedule: dict[str, int], start: datetime) -> datetime:
         """Compute the next datetime at which ``schedule`` should run.

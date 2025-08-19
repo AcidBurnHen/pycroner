@@ -1,4 +1,5 @@
 import sys
+import pytest 
 import importlib
 from datetime import datetime
 from pycroner.check import should_run
@@ -46,10 +47,12 @@ def test_load_config(tmp_path):
     sys.modules['yaml'] = DummyYAML
     load_mod = importlib.reload(importlib.import_module("pycroner.load"))
 
-    jobs = load_mod.load_config(str(cfg_file))
-    assert len(jobs) == 1
+    cron_jobs, hook_jobs = load_mod.load_config(str(cfg_file))
+
+    assert len(cron_jobs) == 1
+    assert hook_jobs == []  # none in this config
     
-    job = jobs[0]
+    job = cron_jobs[0]
     assert job.id == "j"
     assert job.command == "echo x"
     assert job.schedule
@@ -111,3 +114,33 @@ def test_run_job_invokes_popen(monkeypatch):
 
     assert called["cmd"] == ["echo", "hello"]
     assert called["shell"] is False
+
+
+def test_on_start_and_on_exit(monkeypatch):
+    run_mod = importlib.reload(importlib.import_module("pycroner.runner"))
+
+    jobs = [
+        JobSpec(id="start", schedule="on_start", command="echo s"),
+        JobSpec(id="end", schedule="on_exit", command="echo e"),
+    ]
+
+    # return cron_jobs=[], hook_jobs=[start,end]
+    monkeypatch.setattr(run_mod, "load_config", lambda path: ([], jobs))
+    monkeypatch.setattr(run_mod.os.path, "getmtime", lambda path: 0)
+
+    runner = run_mod.Runner()
+
+    executed = []
+
+    def fake_run(instance):
+        executed.append(instance.id)
+
+    monkeypatch.setattr(runner, "_Runner__run_process", fake_run)
+    monkeypatch.setattr(run_mod.time, "sleep", lambda *args, **kwargs: (_ for _ in ()).throw(StopIteration))
+
+    with pytest.raises(StopIteration):
+        runner.run()
+
+    runner._Runner__run_exit_jobs()
+
+    assert executed == ["start", "end"]

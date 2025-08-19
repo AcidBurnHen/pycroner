@@ -10,7 +10,7 @@ class JobInstance:
 @dataclass
 class JobSpec:
     id: str 
-    schedule: Dict[str, int] 
+    schedule: Union[str, Dict[str, int]]
     command: str 
     fanout: Union[int, List[str], None] = None 
 

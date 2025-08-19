@@ -1,4 +1,4 @@
-from typing import List, Set, Dict 
+from typing import List, Set, Dict, Union 
 
 class CronParser:
     def __init__(self):
@@ -11,8 +11,17 @@ class CronParser:
             "weekday": (0, 6)
         }        
 
-    def parse(self, expr: str) -> Dict[str, int]:
-        parts = expr.strip().split()
+        self.HOOKS = {
+            "on_start", 
+            "on_exit",
+        }
+
+    def parse(self, expr: str) -> Union[str, Dict[str, int]]:
+        expr = expr.strip()
+        if expr in self.HOOKS:
+            return expr 
+        
+        parts = expr.split()
         if len(parts) != 5: 
             raise ValueError(f"Expected 5 fields in cron expression, got: {len(parts)}, please provide a proper cron expression")
         
