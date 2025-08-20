@@ -12,17 +12,24 @@ from pycroner.load import load_config
 from pycroner.models import JobInstance, JobSpec
 from pycroner.printer import Printer
 from pycroner.cli_colors import CliColorPicker
-
+from pycroner.logger import Logger
 
 class Runner:
     def __init__(self, config_path="pycroner.yml", to_print=True):
         self.config_path = config_path
+        self._to_print = to_print
         self.printer = Printer(to_print=to_print)
         self.color_picker = CliColorPicker()
 
         self._on_start_jobs: List[JobSpec] = []
         self._on_exit_jobs: List[JobSpec] = []
         self._exit_ran = False 
+
+        # self.executor = ProcessExecutor(self.printer)
+        # self.executor.start()
+        self.logger = Logger(self.printer)
+        if to_print: 
+            self.logger.start()
 
     def run_once(self, instance: JobInstance):
         self.__run_process(instance)
@@ -136,6 +143,13 @@ class Runner:
 
     def __signal_handler(self, signum, frame):
         self.__run_exit_jobs()
+
+        try: 
+            self.logger.shutdown()
+        except Exception as e: 
+            self.printer.write(f"\033[34m[pycroner]\033[0m: Logger shutdown error: {e}")
+
+
         sys.exit(0)
 
     def __compute_next_run_time(self, schedule: dict[str, int], start: datetime) -> datetime:
@@ -227,9 +241,10 @@ class Runner:
 
             color = self.color_picker.get(instance.id)
             prefix = f'{color}[{instance.id}]\033[0m: '
-            for line in proc.stdout:
-                self.printer.write(prefix + line.rstrip())
 
+            if self._to_print:
+                self.logger.watch(proc, prefix)
+    
         except Exception as e: 
             self.printer.write(f"\033[34m[pycroner]\033[0m: Failed to run job: {instance.id}")
             self.printer.write(f"\033[34m[pycroner]\033[0m: Error: {e}")
