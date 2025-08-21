@@ -21,6 +21,7 @@ Along the way, I added a few extra things:
 - **Fanout support** — Run the same job multiple times with different args or in parallel.
 - **Hot reload** — Update your config and it just picks it up live.
 - **Hooks** — Jobs can run with specific scheduling hooks that are not possible with regular cron patterns, like on_start and on_exit. 
+- **Multi-schedule configs** - You can define multiple schedules per config and they will be merged as one unified set of rules for the job, hook and cron jobs don't get merged, but still work together. 
 
 If you're building automation or ETL flows, or just want a sane way to run time-based jobs in a Python project, this might save you from the time and pain I went through managing a project on both Windows and Linux.
 
@@ -99,6 +100,13 @@ jobs:
   - id: "cleanup"
     schedule: "on_exit"
     command: "python cleanup.py"
+
+  - id: "multi-conf-job"
+    schedule: 
+      - "on_start"
+      - "*/2 * * * *"
+      - "*/3 * * * *"
+    command: "echo 'Hello usefulness'" 
 ```
 
 Jobs run independently, and any output or error handling is left to your

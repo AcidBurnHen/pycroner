@@ -1,9 +1,10 @@
 import os
 import sys
 import time
+import heapq
 import signal 
 import atexit
-import heapq
+import itertools
 import subprocess
 from datetime import datetime, timedelta
 from calendar import monthrange
@@ -25,8 +26,8 @@ class Runner:
         self._on_exit_jobs: List[JobSpec] = []
         self._exit_ran = False 
 
-        # self.executor = ProcessExecutor(self.printer)
-        # self.executor.start()
+        self._counter = itertools.count()
+
         self.logger = Logger(self.printer)
         if to_print: 
             self.logger.start()
@@ -62,13 +63,13 @@ class Runner:
         now = datetime.now()
         
         for job in cron_jobs:
-            heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), job))
+            heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), next(self._counter), job))
 
         while True:
             if not job_runs:
                 time.sleep(60)
             else:
-                next_time, _ = job_runs[0]
+                next_time, _, _ = job_runs[0]
                 now = datetime.now()
                 
                 sleep_for = (next_time - now).total_seconds()
@@ -79,13 +80,13 @@ class Runner:
                 due: List[Tuple[datetime, JobSpec]] = []
                 
                 while job_runs and job_runs[0][0] <= now:
-                    _, job = heapq.heappop(job_runs)
+                    _, _, job = heapq.heappop(job_runs)
                     due.append((now, job))
 
                 for _, job in due:
                     self.__run_job(job)
 
-                    heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), job,),)
+                    heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), next(self._counter), job,),)
 
             # Reload configuration if it has changed.
             config_new_modified_at = os.path.getmtime(self.config_path)
@@ -98,7 +99,7 @@ class Runner:
                 now = datetime.now()
                 
                 for job in cron_jobs:
-                    heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), job))
+                    heapq.heappush(job_runs, (self.__compute_next_run_time(job.schedule, now), next(self._counter), job))
 
     @staticmethod
     def __mask_to_list(mask: int) -> List[int]:

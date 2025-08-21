@@ -11,7 +11,7 @@ This document defines the structure and expected behavior of the `pycroner.yml` 
 ```yaml
 jobs:
   - id: string               # Required, unique job identifier
-    schedule: string         # Required, crontab-style schedule string
+    schedule: string | list  # Required, crontab-style schedule string, hook, or a list of schedules
     command: string          # Required, base shell command to execute
     fanout:                  # Optional, integer or list of argument strings
 ```
@@ -91,6 +91,13 @@ jobs:
   - id: "ping"
     schedule: "* * * * *"
     command: "python ping.py"
+
+  - id: "multi-conf-job"
+    schedule: 
+      - "on_start"
+      - "*/2 * * * *"
+      - "*/3 * * * *"
+    command: "echo 'Hello usefulness'" 
 ```
 
 ## Notes
