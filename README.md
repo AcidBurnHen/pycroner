@@ -5,6 +5,8 @@
 Jobs are configured via a YAML file and executed by the runner once their
 cron schedule matches the current time.
 
+While this Python package is easy to install and get started with, I am also actively developing its Rust counterpart [croner](https://github.com/AcidBurnHen/croner). I continuously share ideas and improvements between the two, bringing new features from PyCroner into Croner and applying Rust-inspired optimizations to make the Python version faster. I do not plan on dropping support for either project. My goal is to keep them in feature parity and evolving side by side.
+
 ## Why Pycroner?
 
 This started as a tool I built for myself.
