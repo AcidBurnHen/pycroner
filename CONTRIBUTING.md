@@ -10,6 +10,10 @@ Contributions of all kinds are welcome—bug reports, fixes, documentation, and 
 ```bash
 pip install -e .
 ```
+Or 
+```bash
+uv sync 
+```
 3. Run the test suite to ensure everything works:
 
 ```bash
